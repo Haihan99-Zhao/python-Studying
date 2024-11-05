@@ -1,8 +1,8 @@
 # Define all functions in this module.
 import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
 def read_image(path, show=False):
-    import matplotlib.pyplot as plt
-    import numpy as np
     image = plt.imread(path)
 
     if show :
@@ -27,7 +27,7 @@ def read_image(path, show=False):
 
 def get_clock_hands(clock_RGB):
     import numpy as np
-    gap = 0.15
+    gap = 0.16
     hour_hand = []
     minute_hand = []
     for x in range(clock_RGB.shape[0]):
@@ -48,6 +48,8 @@ def get_angle(coords):
         True
     else:
         coords = np.array(coords)
+    
+    print(coords.shape)
     pixels_x = coords[:, 0]
     pixels_y = coords[:, 1]
 
@@ -180,13 +182,18 @@ def validate_batch(folder_path, tolerance):
             file.write(formatted_text)
 
 
-def get_the_time(angle_hour, angle_minute):
-    time_table = analog_to_digital(angle_hour, angle_minute)
-    hour = int(time_table[:2])
-    minute = int(time_table[-2:])
-    total_minutes = hour*60 + minute
-    return total_minutes
+# def get_the_time(angle_hour, angle_minute):
+#     time_table = analog_to_digital(angle_hour, angle_minute)
+#     hour = int(time_table[:2])
+#     minute = int(time_table[-2:])
+#     total_minutes = hour*60 + minute
+#     return total_minutes
+def read_time(angle_hour, angle_minute):
+    hour = angle_hour // (np.pi/6)
+    minute = angle_minute / (np.pi/6) * 5
+    total_time = hour * 60 + minute
 
+    return total_time
 
 def check_coupling(path_1, path_2):
     clock_array1 = read_image(path_1)
@@ -196,11 +203,15 @@ def check_coupling(path_1, path_2):
 
     hour_angle1 = get_angle(hour_hand1)
     minute_angle1 = get_angle(minute_hand1)
-    clock_time1 = get_the_time(hour_angle1, minute_angle1) 
+
+    clock_time1 = read_time(hour_angle1, minute_angle1)
+    # clock_time1 = get_the_time(hour_angle1, minute_angle1) 
 
     hour_angle2 = get_angle(hour_hand2)
     minute_angle2 = get_angle(minute_hand2)
-    clock_time2 = get_the_time(hour_angle2, minute_angle2)
+
+    clock_time2 = read_time(hour_angle2, minute_angle2)
+    #clock_time2 = get_the_time(hour_angle2, minute_angle2)
     
     self_error1 = check_alignment(hour_angle1, minute_angle1)
     self_error2 = check_alignment(hour_angle2, minute_angle2)
