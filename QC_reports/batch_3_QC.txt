@@ -1,27 +1,19 @@
 Batch number:3
-Checked on 2024-11-03, 17:14:45
+Checked on 2024-11-05, 16:24:59
 
-Total number of clocks:25 Number of clocks passing quality control (4-minute tolerance): 3Batch quality: 12.0%
+Total number of clocks:25 
+Number of clocks passing quality control (4-minute tolerance): 13
+Batch quality: 52.0%
 Clocks to send back for readjustment:
-clock_images\batch_3\clock_0.png:  -104min
-clock_images\batch_3\clock_1.png:   -90min
-clock_images\batch_3\clock_10.png:   -85min
-clock_images\batch_3\clock_11.png:   -96min
-clock_images\batch_3\clock_12.png:   -82min
-clock_images\batch_3\clock_13.png:  -105min
-clock_images\batch_3\clock_14.png:   -89min
-clock_images\batch_3\clock_16.png:   -83min
-clock_images\batch_3\clock_17.png:    -6min
-clock_images\batch_3\clock_18.png:   -78min
-clock_images\batch_3\clock_19.png:   -98min
-clock_images\batch_3\clock_2.png:  -110min
-clock_images\batch_3\clock_21.png:   -15min
-clock_images\batch_3\clock_22.png:   -78min
-clock_images\batch_3\clock_23.png:   -99min
-clock_images\batch_3\clock_24.png:   -86min
-clock_images\batch_3\clock_3.png:   -94min
-clock_images\batch_3\clock_4.png:   -14min
-clock_images\batch_3\clock_5.png:   -86min
-clock_images\batch_3\clock_6.png:   -76min
-clock_images\batch_3\clock_8.png:   -14min
-clock_images\batch_3\clock_9.png:  -107min
+clock_23     -11min
+clock_6      +11min
+clock_9      +11min
+clock_10      -8min
+clock_14      +7min
+clock_19      +6min
+clock_0       -5min
+clock_12      +5min
+clock_16      -5min
+clock_18      -5min
+clock_21      -5min
+clock_22      +5min
