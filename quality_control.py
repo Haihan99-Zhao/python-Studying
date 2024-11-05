@@ -1,4 +1,5 @@
 # Define all functions in this module.
+import numpy as np
 def read_image(path, show=False):
     import matplotlib.pyplot as plt
     import numpy as np
@@ -64,10 +65,8 @@ def get_angle(coords):
 
     else:
         theta, inter = np.polyfit(pixels_x, pixels_y, 1)
-        greater_than_51 = pixels_x >= 51
-        x_count = np.sum(greater_than_51)
         
-        if x_count >= 5:
+        if np.median(pixels_x) >= 51:
             radian = np.pi - np.arctan(theta)
         else:
             if np.arctan(theta) < 0:
@@ -76,38 +75,42 @@ def get_angle(coords):
                 radian = 2*np.pi - np.arctan(theta)
     
     return radian
+
 def analog_to_digital(angle_hour, angle_minute):
     import numpy as np
     angle_hour,angle_minute = float(angle_hour),float(angle_minute)
-    time_hour = int((angle_hour / (np.pi/6)) //1)
+    time_hour = int(angle_hour / (np.pi/6))
     time_minute = round(angle_minute / (np.pi/6) * 5)
 
     if time_minute == 60:
-        time_hour =+ 1 
-    else:
-        next
+        time_hour += 1
+        time_minute = 0
 
+    
     if time_hour == 0:
-        return f"12:{time_minute}"
-    if time_hour//10 == 0:
-        return f"0{time_hour}:{time_minute}"
-    else:
-        return f"{time_hour}:{time_minute}"
+        time_hour = 12
+    modified_hour = f"0{time_hour}"
+    modified_minute = f"0{time_minute}"
+    
+    return f"{modified_hour[-2:]}:{modified_minute[-2:]}"
 
 def check_alignment(angle_hour, angle_minute):
     import numpy as np
     angle_hour,angle_minute = float(angle_hour),float(angle_minute)
-    correct_hour = int((angle_hour / (np.pi/6)) //1)
-    correct_minute = round(((angle_hour / (np.pi/6)) - correct_hour)*5)
+    correct_hour = int(angle_hour / (np.pi/6))
+    correct_minute = round(((angle_hour / (np.pi/6)) - correct_hour) * 60)
     correct_total = 60*correct_hour + correct_minute
 
-    wrong_hour = int((angle_hour / (np.pi/6)) //1)
+    wrong_hour = int(angle_hour / (np.pi/6)) 
     wrong_minute = round(angle_minute / (np.pi/6) * 5)
     wrong_total = 60*wrong_hour + wrong_minute
 
-    diff = correct_total - wrong_total
-    if abs(diff) > 15:#!!!不确定是否正确
-        return -abs(60-diff)
+    diff = wrong_total - correct_total 
+    if abs(diff) > 30:#!!!不确定是否正确
+        if diff <0:
+            return diff+60
+        else:
+            return diff-60
     else:
         return diff
 
@@ -116,7 +119,7 @@ def validate_batch(folder_path, tolerance):
     from datetime import datetime
     from pathlib import Path
     import os
-    import numpy as np
+    # import numpy as np
 
     number_batch = folder_path[-1]
 
@@ -130,6 +133,7 @@ def validate_batch(folder_path, tolerance):
     abnormal_sum = 0
     abnormal_list = []
     abnormal_diffs = []
+    
     for clock in files:
         clock_array = read_image(clock)
         hour_hand, minute_hand = get_clock_hands(clock_array)
@@ -139,15 +143,17 @@ def validate_batch(folder_path, tolerance):
 
         diff = check_alignment(hour_angle, minute_angle)
         if abs(diff) > tolerance:
+            abnormal_name = clock.stem 
             abnormal_sum += 1
-            abnormal_list.append(clock)
+            abnormal_list.append(abnormal_name)
             abnormal_diffs.append(diff)
+        
     rate_batch = round((1 - (abnormal_sum/check_sum)) * 100, 1)
     
     abnormal_dict = dict(zip(abnormal_list, abnormal_diffs))
     sorted_abnormal = dict(sorted(abnormal_dict.items(), key=lambda item: abs(item[1]), reverse=True))
 
-    lines = [
+    report_main = [
         f"Batch number:{number_batch}\n"
         f"Checked on {formatted_datetime}\n"
         "\n"
@@ -166,10 +172,58 @@ def validate_batch(folder_path, tolerance):
     report_file_path = os.path.join("QC_reports", f'batch_{number_batch}_QC.txt')
 
     with open(report_file_path, 'w') as file:
-        file.writelines(lines)
-        for clock_label, clock_diff in abnormal_dict.items():
+        file.writelines(report_main)
+        for clock_label, clock_diff in sorted_abnormal.items():
             if clock_diff > 0:
-                file.write(f"{clock_label}: +{clock_diff:>5}min\n")
-            else:
-                file.write(f"{clock_label}: {clock_diff:>5}min\n")
+                clock_diff = f"+{clock_diff}"
+            formatted_text = "{:<10} {:>5}min\n".format(clock_label, clock_diff)
+            file.write(formatted_text)
+
+
+def get_the_time(angle_hour, angle_minute):
+    time_table = analog_to_digital(angle_hour, angle_minute)
+    hour = int(time_table[:2])
+    minute = int(time_table[-2:])
+    total_minutes = hour*60 + minute
+    return total_minutes
+
+
+def check_coupling(path_1, path_2):
+    clock_array1 = read_image(path_1)
+    clock_array2 = read_image(path_2)
+    hour_hand1, minute_hand1 = get_clock_hands(clock_array1)
+    hour_hand2, minute_hand2 = get_clock_hands(clock_array2)
+
+    hour_angle1 = get_angle(hour_hand1)
+    minute_angle1 = get_angle(minute_hand1)
+    clock_time1 = get_the_time(hour_angle1, minute_angle1) 
+
+    hour_angle2 = get_angle(hour_hand2)
+    minute_angle2 = get_angle(minute_hand2)
+    clock_time2 = get_the_time(hour_angle2, minute_angle2)
+    
+    self_error1 = check_alignment(hour_angle1, minute_angle1)
+    self_error2 = check_alignment(hour_angle2, minute_angle2)
+
+    real_time1 = clock_time1 - self_error1
+    real_time2 = clock_time2 - self_error2
+
+    self_diff = self_error2 - self_error1
+    real_diff = real_time2 - real_time1
+    print(real_time2, real_time1)
+    print(real_diff)
+    print(self_diff)
+    if self_diff == 0:
+        return f"The hour and minute hand are coupled properly."
+    else:
+        diff_per_hour = self_diff/(real_diff/60)
+        print
+        decimal_part, intergal_part = np.modf(diff_per_hour)
+        minute_diff = abs(intergal_part)
+        second_diff = abs(int(decimal_part*60)) 
+        
+        if diff_per_hour < 0:
+            return f"The minute hand loses {minute_diff} minutes, {second_diff} seconds per hour."
+        if diff_per_hour > 0:
+            return f"The minute hand gains {minute_diff} minutes, {second_diff} seconds per hour."
 
