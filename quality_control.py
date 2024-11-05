@@ -1,7 +1,7 @@
 # Define all functions in this module.
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
+
 def read_image(path, show=False):
     image = plt.imread(path)
 
@@ -25,18 +25,42 @@ def read_image(path, show=False):
 
     return image
 
+def outliers_clean_points(clock_RGB, n=7.5):
+
+    each_std = np.std(clock_RGB, axis=2)
+    reshaped_std = each_std.reshape(-1)
+    total_std = np.std(reshaped_std)
+    total_mean = np.mean(reshaped_std)
+    upper_bound = total_mean + n * total_std
+
+    new_image = np.ones_like(clock_RGB)
+
+    for i in range(clock_RGB.shape[0]):
+        for j in range(clock_RGB.shape[1]):
+            pixel = clock_RGB[i, j]
+
+            pixel_variance = np.std(pixel)
+    
+
+            if pixel_variance >= upper_bound:
+                new_image[i,j] = pixel  
+
+    return new_image
+
+
 def get_clock_hands(clock_RGB):
-    import numpy as np
-    gap = 0.16
+    clock_RGB = outliers_clean_points(clock_RGB)
+   
     hour_hand = []
     minute_hand = []
+
     for x in range(clock_RGB.shape[0]):
         for y in range(clock_RGB.shape[1]):
             vec = clock_RGB[x,y]
             index = [x,y]
-            if vec[0] >= vec[1] + gap and vec[0] >= vec[2] + gap:
+            if vec[0] > vec[1]  and vec[0] > vec[2] :
                 hour_hand.append(index)
-            elif vec[1] >= vec[0] + gap and vec[1] >= vec[2] + gap:
+            elif vec[1] > vec[0]  and vec[1] > vec[2] :
                 minute_hand.append(index)
     
     return hour_hand, minute_hand
@@ -48,8 +72,7 @@ def get_angle(coords):
         True
     else:
         coords = np.array(coords)
-    
-    print(coords.shape)
+
     pixels_x = coords[:, 0]
     pixels_y = coords[:, 1]
 
@@ -182,12 +205,7 @@ def validate_batch(folder_path, tolerance):
             file.write(formatted_text)
 
 
-# def get_the_time(angle_hour, angle_minute):
-#     time_table = analog_to_digital(angle_hour, angle_minute)
-#     hour = int(time_table[:2])
-#     minute = int(time_table[-2:])
-#     total_minutes = hour*60 + minute
-#     return total_minutes
+
 def read_time(angle_hour, angle_minute):
     hour = angle_hour // (np.pi/6)
     minute = angle_minute / (np.pi/6) * 5
@@ -221,9 +239,8 @@ def check_coupling(path_1, path_2):
 
     self_diff = self_error2 - self_error1
     real_diff = real_time2 - real_time1
-    print(real_time2, real_time1)
-    print(real_diff)
-    print(self_diff)
+
+
     if self_diff == 0:
         return f"The hour and minute hand are coupled properly."
     else:
