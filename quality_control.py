@@ -1,6 +1,9 @@
 # Define all functions in this module.
 import numpy as np
 import matplotlib.pyplot as plt
+from datetime import datetime
+from pathlib import Path
+import os
 
 def read_image(path, show=False):
     image = plt.imread(path)
@@ -25,7 +28,7 @@ def read_image(path, show=False):
 
     return image
 
-def outliers_clean_points(clock_RGB, n=7.5):
+def outliers_clean_points(clock_RGB, n=3):
 
     each_std = np.std(clock_RGB, axis=2)
     reshaped_std = each_std.reshape(-1)
@@ -43,30 +46,29 @@ def outliers_clean_points(clock_RGB, n=7.5):
     
 
             if pixel_variance >= upper_bound:
-                new_image[i,j] = pixel  
+                new_image[i,j] = pixel
 
     return new_image
 
 
 def get_clock_hands(clock_RGB):
-    clock_RGB = outliers_clean_points(clock_RGB)
+
    
     hour_hand = []
     minute_hand = []
-
+    gap = 0.1
     for x in range(clock_RGB.shape[0]):
         for y in range(clock_RGB.shape[1]):
             vec = clock_RGB[x,y]
             index = [x,y]
-            if vec[0] > vec[1]  and vec[0] > vec[2] :
+            if vec[0] > vec[1] + gap  and vec[0] > vec[2] + gap:
                 hour_hand.append(index)
-            elif vec[1] > vec[0]  and vec[1] > vec[2] :
+            elif vec[1] > vec[0] + gap and vec[1] > vec[2] + gap:
                 minute_hand.append(index)
     
     return hour_hand, minute_hand
 
 def get_angle(coords):
-    import numpy as np
 
     if isinstance(coords, np.ndarray):
         True
@@ -76,41 +78,46 @@ def get_angle(coords):
     pixels_x = coords[:, 0]
     pixels_y = coords[:, 1]
 
-    if len(np.unique(pixels_x)) in [1, 2]:
-        if max(pixels_y) < 49:
-            radian = 3*np.pi/2
+    if len(np.unique(pixels_x)) == 1:
+        if np.median(pixels_y) < 49:
+            radian = 3 * np.pi / 2
         else:
-            radian = np.pi/2
+            radian = np.pi / 2
 
-    elif len(np.unique(pixels_y)) in [1, 2]:
-        if max(pixels_x) < 49:
+    elif len(np.unique(pixels_y)) ==1 :
+        if np.median(pixels_x) < 49:
             radian = 0
         else:
             radian = np.pi
 
     else:
-        theta, inter = np.polyfit(pixels_x, pixels_y, 1)
-        
+        slope, inter = np.polyfit(pixels_x, pixels_y, 1)
+        # if abs(slope) >= 1:
+        #     slope = round(slope,2)
+        # elif abs(slope) >= 10:
+        #     slope = slope
+        # else:
+        #     slope = round(slope,2)
         if np.median(pixels_x) >= 51:
-            radian = np.pi - np.arctan(theta)
+            if slope == np.inf and np.median(pixels_y) > 50:
+                radian = np.pi / 2
+            elif slope == np.inf and np.median(pixels_y) <= 50:
+                radian = 3*np.pi / 2
+            else:
+                radian = np.pi - np.arctan(slope)
         else:
-            if np.arctan(theta) < 0:
-                radian = abs(np.arctan(theta))
+            if np.median(pixels_y) >= 51 or np.arctan(slope) < 0:
+                radian = - np.arctan(slope)
             else: 
-                radian = 2*np.pi - np.arctan(theta)
+                radian = 2*np.pi - np.arctan(slope)
     
-    return radian
+    return round(radian,1)
 
 def analog_to_digital(angle_hour, angle_minute):
-    import numpy as np
+    
     angle_hour,angle_minute = float(angle_hour),float(angle_minute)
     time_hour = int(angle_hour / (np.pi/6))
-    time_minute = round(angle_minute / (np.pi/6) * 5)
-
-    if time_minute == 60:
-        time_hour += 1
-        time_minute = 0
-
+    time_minute = int(angle_minute / (np.pi/6) * 5)
     
     if time_hour == 0:
         time_hour = 12
@@ -120,18 +127,15 @@ def analog_to_digital(angle_hour, angle_minute):
     return f"{modified_hour[-2:]}:{modified_minute[-2:]}"
 
 def check_alignment(angle_hour, angle_minute):
-    import numpy as np
+    
     angle_hour,angle_minute = float(angle_hour),float(angle_minute)
-    correct_hour = int(angle_hour / (np.pi/6))
-    correct_minute = round(((angle_hour / (np.pi/6)) - correct_hour) * 60)
-    correct_total = 60*correct_hour + correct_minute
+    correct_hour = angle_hour // (np.pi/6)
 
-    wrong_hour = int(angle_hour / (np.pi/6)) 
-    wrong_minute = round(angle_minute / (np.pi/6) * 5)
-    wrong_total = 60*wrong_hour + wrong_minute
-
-    diff = wrong_total - correct_total 
-    if abs(diff) > 30:#!!!不确定是否正确
+    correct_minute = ((angle_hour / (np.pi/6)) - correct_hour) * 60
+    wrong_minute = angle_minute / (np.pi/6) * 5
+    
+    diff = wrong_minute - correct_minute
+    if abs(diff) > 30:
         if diff <0:
             return diff+60
         else:
@@ -141,10 +145,7 @@ def check_alignment(angle_hour, angle_minute):
 
 
 def validate_batch(folder_path, tolerance):
-    from datetime import datetime
-    from pathlib import Path
-    import os
-    # import numpy as np
+    
 
     number_batch = folder_path[-1]
 
@@ -161,12 +162,13 @@ def validate_batch(folder_path, tolerance):
     
     for clock in files:
         clock_array = read_image(clock)
-        hour_hand, minute_hand = get_clock_hands(clock_array)
+        new_array = outliers_clean_points(clock_array)
+        hour_hand, minute_hand = get_clock_hands(new_array)
 
         hour_angle = get_angle(hour_hand)
         minute_angle = get_angle(minute_hand)
 
-        diff = check_alignment(hour_angle, minute_angle)
+        diff = int(check_alignment(hour_angle, minute_angle))
         if abs(diff) > tolerance:
             abnormal_name = clock.stem 
             abnormal_sum += 1
@@ -206,52 +208,57 @@ def validate_batch(folder_path, tolerance):
 
 
 
-def read_time(angle_hour, angle_minute):
+def real_time(angle_hour):
     hour = angle_hour // (np.pi/6)
-    minute = angle_minute / (np.pi/6) * 5
+    minute = (angle_hour / (np.pi/6) - hour) * 60
+    # minute = angle_minute / (np.pi/6) * 5
     total_time = hour * 60 + minute
 
-    return total_time
+    return round(total_time,3)
 
 def check_coupling(path_1, path_2):
     clock_array1 = read_image(path_1)
     clock_array2 = read_image(path_2)
-    hour_hand1, minute_hand1 = get_clock_hands(clock_array1)
-    hour_hand2, minute_hand2 = get_clock_hands(clock_array2)
 
+    new_array1 = outliers_clean_points(clock_array1)
+    new_array2 = outliers_clean_points(clock_array2)
+
+    hour_hand1, minute_hand1 = get_clock_hands(new_array1)
+    hour_hand2, minute_hand2 = get_clock_hands(new_array2)
+    
     hour_angle1 = get_angle(hour_hand1)
     minute_angle1 = get_angle(minute_hand1)
 
-    clock_time1 = read_time(hour_angle1, minute_angle1)
-    # clock_time1 = get_the_time(hour_angle1, minute_angle1) 
+    real_time1 = real_time(hour_angle1)
+    #clock_time1 = analog_to_digital(hour_angle1, minute_angle1)
+    self_error1 = check_alignment(hour_angle1, minute_angle1) 
 
     hour_angle2 = get_angle(hour_hand2)
     minute_angle2 = get_angle(minute_hand2)
 
-    clock_time2 = read_time(hour_angle2, minute_angle2)
-    #clock_time2 = get_the_time(hour_angle2, minute_angle2)
-    
-    self_error1 = check_alignment(hour_angle1, minute_angle1)
+    real_time2 = real_time(hour_angle2)
+    #clock_time2 = real_time(hour_angle2, minute_angle2)
     self_error2 = check_alignment(hour_angle2, minute_angle2)
 
-    real_time1 = clock_time1 - self_error1
-    real_time2 = clock_time2 - self_error2
-
-    self_diff = self_error2 - self_error1
-    real_diff = real_time2 - real_time1
-
-
+    #real_time1 = clock_time1 - self_error1
+    #real_time2 = clock_time2 - self_error2
+    #print(clock_time1)
+    self_diff = int(self_error2) - int(self_error1)
+    real_diff = int(round(real_time2,2) - round(real_time1,2))
+    print(self_error1)
+    print(self_error2)
+    print(real_time1)
+    print(real_time2)
+    print(self_diff)
+    print(real_diff)
     if self_diff == 0:
         return f"The hour and minute hand are coupled properly."
     else:
         diff_per_hour = self_diff/(real_diff/60)
-        print
-        decimal_part, intergal_part = np.modf(diff_per_hour)
-        minute_diff = abs(intergal_part)
-        second_diff = abs(int(decimal_part*60)) 
+        minute_diff = int(diff_per_hour)
+        second_diff = round(diff_per_hour % 1 * 60)
         
         if diff_per_hour < 0:
-            return f"The minute hand loses {minute_diff} minutes, {second_diff} seconds per hour."
+            return f"The minute hand loses {abs(minute_diff)} minutes, {abs(second_diff)} seconds per hour."
         if diff_per_hour > 0:
-            return f"The minute hand gains {minute_diff} minutes, {second_diff} seconds per hour."
-
+            return f"The minute hand gains {abs(minute_diff)} minutes, {abs(second_diff)} seconds per hour."
