@@ -1,9 +1,10 @@
-Batch number:1
-Checked on 2024-11-07, 11:09:06
+Batch number: 1
+Checked on 2024-11-07, 12:01:35
 
-Total number of clocks:30 
+Total number of clocks: 30
 Number of clocks passing quality control (4-minute tolerance): 25
 Batch quality: 83.3%
+
 Clocks to send back for readjustment:
 clock_11      -6min
 clock_3       -6min
