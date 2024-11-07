@@ -416,7 +416,10 @@ def validate_batch(folder_path, tolerance):
     
     # calculate the proportion of abnormal clocks and convert it into percentage
     rate_batch = round((1 - (abnormal_sum/check_sum)) * 100, 1) 
-    
+    if rate_batch == 100.0:
+        rate_batch = 100
+    elif rate_batch == 0.0:
+        rate_batch = 0
     # Creat the keys and values of a new dict: their names and errors
     abnormal_dict = dict(zip(abnormal_list, abnormal_diffs))
     # sort the contents of a dictionary based on the abs of the error
