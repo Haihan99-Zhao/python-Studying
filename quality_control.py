@@ -389,6 +389,9 @@ def validate_batch(folder_path, tolerance):
     #-----------------------------------------------------------
     # *Step1: prepare the parameters and read the paths and their contents
 
+    if isinstance(folder_path, str):
+        folder_path = str(folder_path)
+
     number_batch = folder_path[-1] # the last character of the path as the batch number
 
     # store the current time and convert it to a specific format
