@@ -435,7 +435,6 @@ def validate_batch(folder_path, tolerance):
         f"Number of clocks passing quality control ({tolerance}-minute tolerance): {check_sum - abnormal_sum}\n"
         f"Batch quality: {rate_batch}%\n"
         "\n"
-        f"Clocks to send back for readjustment:\n"
     ]
 
     #-----------------------------------------------------------
@@ -449,7 +448,8 @@ def validate_batch(folder_path, tolerance):
 
     with open(report_file_path, 'w') as file: # wirte content...
         file.writelines(report_main) # write the main
-
+        if rate_batch != 100:
+            file.write(f"Clocks to send back for readjustment:\n")
         for clock_label, clock_diff in sorted_abnormal.items(): # write the abnormal datas
             if clock_diff > 0: 
                 clock_diff = f"+{clock_diff}" # fast situation, we add a plus before number
