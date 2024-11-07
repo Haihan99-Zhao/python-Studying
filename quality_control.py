@@ -514,7 +514,7 @@ def check_coupling(path_1, path_2):
         return f"The hour and minute hand are coupled properly."
     else:
         # real_passtime is in minutes, we convert it to hours and then calculate
-        diff_per_hour = int(self_diff)/real_passtime/60
+        diff_per_hour = int(self_diff)/int(real_passtime)/60
         minute_diff = int(diff_per_hour)
         second_diff = round(diff_per_hour% 1 * 60)
         
