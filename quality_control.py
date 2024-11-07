@@ -80,7 +80,7 @@ def read_image(path, show=False):
 
 
 # Extra function: Using outliers to clean noise points.
-def outliers_clean_points(clock_RGB, n=6):
+def outliers_clean_points(clock_RGB, n=2):
 
     """
     This function designed for removing "noise", the method is that
@@ -434,7 +434,7 @@ def validate_batch(folder_path, tolerance):
         "\n"
         f"Batch quality: {rate_batch}%"
         "\n"
-        "Clocks to send back for readjustment:"
+        f"Clocks to send back for readjustment:"
         "\n"
     ]
 
@@ -514,7 +514,7 @@ def check_coupling(path_1, path_2):
         return f"The hour and minute hand are coupled properly."
     else:
         # real_passtime is in minutes, we convert it to hours and then calculate
-        diff_per_hour = int(self_diff)/(int(real_passtime)/60) 
+        diff_per_hour = int(self_diff)/real_passtime/60
         minute_diff = int(diff_per_hour)
         second_diff = round(diff_per_hour% 1 * 60)
         
