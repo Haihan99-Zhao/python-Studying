@@ -355,7 +355,7 @@ def check_alignment(angle_hour, angle_minute):
     
     #-----------------------------------------------------------
     # ***Step 3: alignment can be calbulated by difference.
-    diff = wrong_minute - correct_minute
+    diff = int(wrong_minute - correct_minute)
 
     # Since the error will not exceed 30 minutes. 
     # e.g.If the clock is slow by 40 minutes, we interpret it as being fast by 20 minutes.
@@ -456,7 +456,7 @@ def validate_batch(folder_path, tolerance):
 
     with open(report_file_path, 'w') as file: # wirte content...
         file.writelines(report_main) # write the main
-        if rate_batch != 100:
+        if rate_batch != f"100.0%":
             file.write(f"Clocks to send back for readjustment:\n")
         for clock_label, clock_diff in sorted_abnormal.items(): # write the abnormal datas
             if clock_diff > 0: 
