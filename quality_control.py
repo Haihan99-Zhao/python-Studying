@@ -80,7 +80,7 @@ def read_image(path, show=False):
 
 
 # Extra function: Using outliers to clean noise points.
-def outliers_clean_points(clock_RGB, n=2):
+def outliers_clean_points(clock_RGB, n=7):
 
     """
     This function designed for removing "noise", the method is that
@@ -138,9 +138,16 @@ def get_clock_hands(clock_RGB):
     hour_hand = []
     minute_hand = []
     threshold = 0.1
-    
-    clock_RGB = outliers_clean_points(clock_RGB)
 
+    each_std = np.std(clock_RGB, axis=2)
+    reshaped_std = each_std.reshape(-1)
+    std_threshold = 0.1
+    std_num = sum(reshaped_std < std_threshold)
+
+    if std_num > int(2/3*len(reshaped_std)):
+        next
+    else:
+        clock_RGB = outliers_clean_points(clock_RGB)
     # Identify the corresponding hour hand by comparing the red channel(first) and muntute
     # hand by the green channel(second).
     for x in range(clock_RGB.shape[0]):
@@ -498,7 +505,7 @@ def check_coupling(path_1, path_2):
     real_passtime_radian = real_angle / (np.pi/6)
     real_pass_hour = int(real_passtime_radian)
     real_pass_minute = (real_passtime_radian - real_pass_hour) * 60
-    real_passtime = real_pass_hour * 60 + real_pass_minute
+    real_passtime = real_pass_hour * 60 + int(real_pass_minute)
 
     #-----------------------------------------------------------
     # **Step2: Calculate the change in misalignment
@@ -514,7 +521,7 @@ def check_coupling(path_1, path_2):
         return f"The hour and minute hand are coupled properly."
     else:
         # real_passtime is in minutes, we convert it to hours and then calculate
-        diff_per_hour = int(self_diff)/int(real_passtime)/60
+        diff_per_hour = int(self_diff)/(real_passtime/60)
         minute_diff = int(diff_per_hour)
         second_diff = round(diff_per_hour% 1 * 60)
         
