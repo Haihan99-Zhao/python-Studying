@@ -428,14 +428,11 @@ def validate_batch(folder_path, tolerance):
         f"Batch number: {number_batch}\n"
         f"Checked on {formatted_datetime}\n"
         "\n"
-        f"Total number of clocks: {check_sum} "
+        f"Total number of clocks: {check_sum}\n"
+        f"Number of clocks passing quality control ({tolerance}-minute tolerance): {check_sum - abnormal_sum}\n"
+        f"Batch quality: {rate_batch}%\n"
         "\n"
-        f"Number of clocks passing quality control ({tolerance}-minute tolerance): {check_sum - abnormal_sum}"
-        "\n"
-        f"Batch quality: {rate_batch}%"
-        "\n"
-        f"Clocks to send back for readjustment:"
-        "\n"
+        f"Clocks to send back for readjustment:\n"
     ]
 
     #-----------------------------------------------------------
