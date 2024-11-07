@@ -515,7 +515,7 @@ def check_coupling(path_1, path_2):
     real_now_minute_angle = (minute_angle1 + real_angle * 12)%(2 * np.pi)
     minute_now = 60 * real_now_minute_angle / (2 * np.pi)
     minute_show = 60 * minute_angle2 / (2 * np.pi)
-    self_diff = minute_now - minute_show
+    self_diff = minute_show - minute_now
 
 
     # self_error1 = check_alignment(hour_angle1, minute_angle1) 
