@@ -80,7 +80,7 @@ def read_image(path, show=False):
 
 
 # Extra function: Using outliers to clean noise points.
-def outliers_clean_points(clock_RGB, n=2):
+def outliers_clean_points(clock_RGB, n=6):
 
     """
     This function designed for removing "noise", the method is that
@@ -425,10 +425,10 @@ def validate_batch(folder_path, tolerance):
     #-----------------------------------------------------------
     # **Step2: wirte down the main text content(title)
     report_main = [
-        f"Batch number:{number_batch}\n"
+        f"Batch number: {number_batch}\n"
         f"Checked on {formatted_datetime}\n"
         "\n"
-        f"Total number of clocks:{check_sum} "
+        f"Total number of clocks: {check_sum} "
         "\n"
         f"Number of clocks passing quality control ({tolerance}-minute tolerance): {check_sum - abnormal_sum}"
         "\n"
