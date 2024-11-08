@@ -351,15 +351,15 @@ def check_alignment(angle_hour, angle_minute):
 
     #-----------------------------------------------------------
     # **Step 2: reading minute hand to get the displayed time directly.
-    # angle_real_minute = (angle_hour /(np.pi/6) ) % 1 * (2*np.pi)
-    # angle_diff = angle_minute - angle_real_minute
-    # diff = angle_diff * 60
+    angle_real_minute = (angle_hour /(np.pi/6) ) % 1 * (2*np.pi)
+    angle_diff = angle_minute - angle_real_minute
+    diff = angle_diff /(2 * np.pi) * 60
     
-    wrong_minute = angle_minute / (np.pi/30)
+    #wrong_minute = angle_minute / (np.pi/30)
     
     #-----------------------------------------------------------
     # ***Step 3: alignment can be calbulated by difference.
-    diff = int(wrong_minute - correct_minute)
+    #diff = int(wrong_minute - correct_minute)
 
     # Since the error will not exceed 30 minutes. 
     # e.g.If the clock is slow by 40 minutes, we interpret it as being fast by 20 minutes.
