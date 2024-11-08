@@ -351,15 +351,15 @@ def check_alignment(angle_hour, angle_minute):
 
     #-----------------------------------------------------------
     # **Step 2: reading minute hand to get the displayed time directly.
-    angle_real_minute = (angle_hour /(np.pi/6) ) % 1 * (2*np.pi)
-    angle_diff = angle_minute - angle_real_minute
-    diff = angle_diff * 60
+    # angle_real_minute = (angle_hour /(np.pi/6) ) % 1 * (2*np.pi)
+    # angle_diff = angle_minute - angle_real_minute
+    # diff = angle_diff * 60
     
-    # wrong_minute = angle_minute / (np.pi/30)
+    wrong_minute = angle_minute / (np.pi/30)
     
     #-----------------------------------------------------------
     # ***Step 3: alignment can be calbulated by difference.
-    # diff = int(wrong_minute - correct_minute)
+    diff = int(wrong_minute - correct_minute)
 
     # Since the error will not exceed 30 minutes. 
     # e.g.If the clock is slow by 40 minutes, we interpret it as being fast by 20 minutes.
@@ -519,8 +519,15 @@ def check_coupling(path_1, path_2):
     real_now_minute = 60 * real_now_minute_angle / (2 * np.pi)
     displayed_minute = 60 * minute_angle2 / (2 * np.pi)
 
-    self_diff = real_now_minute - displayed_minute
+    self_diff = displayed_minute - real_now_minute 
 
+    # Since the error will not exceed 30 minutes. 
+    # e.g.If the clock is slow by 40 minutes, we interpret it as being fast by 20 minutes.
+    if abs(self_diff) >= 31: 
+        if self_diff <0: # view fast as slow, so plus an hour
+            self_diff += 60
+        else:       # view slow as fast, so minus an hour
+            self_diff -= 60
 
     #-----------------------------------------------------------
     # ***Step3: Output text
