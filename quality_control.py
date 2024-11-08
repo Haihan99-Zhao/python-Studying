@@ -80,7 +80,7 @@ def read_image(path, show=False):
 
 
 # Extra function: Using outliers to clean noise points.
-def outliers_clean_points(clock_RGB, n=5):
+def outliers_clean_points(clock_RGB, n=3):
 
     """
     This function designed for removing "noise", the method is that
@@ -144,8 +144,8 @@ def get_clock_hands(clock_RGB):
     std_threshold = 0.1
     std_num = sum(reshaped_std < std_threshold)
 
-    if std_num > int(2/3*len(reshaped_std)):
-        next
+    if std_num > int(2/3*len(reshaped_std)):# if this graph dont contain many noises
+        next    # we dont need to clean it 
     else:
         clock_RGB = outliers_clean_points(clock_RGB)
     # Identify the corresponding hour hand by comparing the red channel(first) and muntute
@@ -427,7 +427,7 @@ def validate_batch(folder_path, tolerance):
     # calculate the proportion of abnormal clocks and convert it into percentage
     rate_batch = 1 - (abnormal_sum/check_sum)
 
-    rate_batch = str(rate_batch * 100)+ "%"
+    rate_batch = str(round(rate_batch * 100,1))+ "%"
     # Creat the keys and values of a new dict: their names and errors
     abnormal_dict = dict(zip(abnormal_list, abnormal_diffs))
     # sort the contents of a dictionary based on the abs of the error
