@@ -80,7 +80,7 @@ def read_image(path, show=False):
 
 
 # Extra function: Using outliers to clean noise points.
-def outliers_clean_points(clock_RGB, n=3):
+def outliers_clean_points(clock_RGB, n=5):
 
     """
     This function designed for removing "noise", the method is that
@@ -141,7 +141,7 @@ def get_clock_hands(clock_RGB):
 
     each_std = np.std(clock_RGB, axis=2)
     reshaped_std = each_std.reshape(-1)
-    std_threshold = 0.1
+    std_threshold = 0.05
     std_num = sum(reshaped_std < std_threshold)
 
     if std_num > int(2/3*len(reshaped_std)):# if this graph dont contain many noises
