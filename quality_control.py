@@ -515,7 +515,7 @@ def check_coupling(path_1, path_2):
     real_now_minute = 60 * real_now_minute_angle / (2 * np.pi)
     displayed_minute = 60 * minute_angle2 / (2 * np.pi)
 
-    self_diff = displayed_minute - real_now_minute 
+    self_diff = int(displayed_minute) - int(real_now_minute) 
 
 
     #-----------------------------------------------------------
