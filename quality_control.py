@@ -351,15 +351,19 @@ def check_alignment(angle_hour, angle_minute):
 
     #-----------------------------------------------------------
     # **Step 2: reading minute hand to get the displayed time directly.
-    wrong_minute = angle_minute / (np.pi/30)
+    angle_real_minute = (angle_hour /(np.pi/6) ) % 1 * (2*np.pi)
+    angle_diff = angle_minute - angle_real_minute
+    diff = angle_diff * 60
+    
+    # wrong_minute = angle_minute / (np.pi/30)
     
     #-----------------------------------------------------------
     # ***Step 3: alignment can be calbulated by difference.
-    diff = int(wrong_minute - correct_minute)
+    # diff = int(wrong_minute - correct_minute)
 
     # Since the error will not exceed 30 minutes. 
     # e.g.If the clock is slow by 40 minutes, we interpret it as being fast by 20 minutes.
-    if abs(diff) > 31: 
+    if abs(diff) >= 31: 
         if diff <0: # view fast as slow, so plus an hour
             return diff+60
         else:       # view slow as fast, so minus an hour
@@ -426,6 +430,7 @@ def validate_batch(folder_path, tolerance):
     
     # calculate the proportion of abnormal clocks and convert it into percentage
     rate_batch = 1 - (abnormal_sum/check_sum)
+
     rate_batch = str(rate_batch * 100)+ "%"
     # Creat the keys and values of a new dict: their names and errors
     abnormal_dict = dict(zip(abnormal_list, abnormal_diffs))
@@ -455,7 +460,7 @@ def validate_batch(folder_path, tolerance):
 
     with open(report_file_path, 'w') as file: # wirte content...
         file.writelines(report_main) # write the main
-        if rate_batch != f"100.0%":
+        if rate_batch != f"100.0%": # if all clock pass test, we dont need show readjustment
             file.write(f"Clocks to send back for readjustment:\n")
         for clock_label, clock_diff in sorted_abnormal.items(): # write the abnormal datas
             if clock_diff > 0: 
@@ -503,26 +508,19 @@ def check_coupling(path_1, path_2):
 
     # Calculate the real time passed based on the angle
     real_passtime = 12*(real_angle/(2*np.pi))
-    # real_passtime_radian = real_angle / (np.pi/6)
-    # real_pass_hour = int(real_passtime_radian)
-    # real_pass_minute = (real_passtime_radian - real_pass_hour) * 60
-    # real_passtime = real_pass_hour * 60 + int(real_pass_minute)
 
     #-----------------------------------------------------------
     # **Step2: Calculate the change in misalignment
     minute_angle1 = get_angle(minute_hand1)
     minute_angle2 = get_angle(minute_hand2)
     real_now_minute_angle = (minute_angle1 + real_angle * 12) % (2 * np.pi)
-    self_diff = (minute_angle2 - real_now_minute_angle)*60 /(2*np.pi)
-    # minute_now = 60 * real_now_minute_angle / (2 * np.pi)
-    # minute_show = 60 * minute_angle2 / (2 * np.pi)
-    # self_diff = minute_show - minute_now
 
+    # calculate the radian for real minute hand
+    real_now_minute = 60 * real_now_minute_angle / (2 * np.pi)
+    displayed_minute = 60 * minute_angle2 / (2 * np.pi)
 
-    # self_error1 = check_alignment(hour_angle1, minute_angle1) 
+    self_diff = real_now_minute - displayed_minute
 
-    # self_error2 = check_alignment(hour_angle2, minute_angle2)
-    # self_diff = self_error2 - self_error1
 
     #-----------------------------------------------------------
     # ***Step3: Output text
@@ -530,7 +528,7 @@ def check_coupling(path_1, path_2):
         return f"The hour and minute hand are coupled properly."
     else:
         # real_passtime is in minutes, we convert it to hours and then calculate
-        diff_per_hour =  (minute_angle2 - real_now_minute_angle)*5/real_angle
+        diff_per_hour = self_diff/real_passtime
         minute_diff = int(diff_per_hour)
         second_diff = round(diff_per_hour% 1 * 60)
         
